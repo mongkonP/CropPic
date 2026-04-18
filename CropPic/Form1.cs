@@ -188,5 +188,26 @@ namespace CropPic
                 }
             }
         }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtUp.Text) || string.IsNullOrWhiteSpace(txtDown.Text))
+            {
+                MessageBox.Show("กรุณากรอกค่าให้ครบ");
+                return;
+            }
+            double numUp = double.Parse(txtUp.Text);
+            double numDwn = double.Parse(txtDown.Text);
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.webp";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    filePic = openFileDialog.FileName;
+                    CropPicAndSave(filePic, numUp, numDwn);
+                    this.Text = $"ไฟล์ต้นฉบับ: {Path.GetFileName(filePic)}";
+                }
+            }
+        }
     }
 }

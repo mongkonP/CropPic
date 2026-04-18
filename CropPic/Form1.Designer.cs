@@ -129,6 +129,7 @@
             button5.TabIndex = 6;
             button5.Text = "Crop ";
             button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
             // 
             // label2
             // 
