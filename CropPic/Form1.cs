@@ -1,5 +1,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System.Threading.Tasks;
+using TORServices.Forms;
 
 namespace CropPic
 {
@@ -26,7 +28,7 @@ namespace CropPic
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private async void button3_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -41,13 +43,19 @@ namespace CropPic
 
                     try
                     {
-                        foreach (string file in openFileDialog.FileNames)
+                        await Task.Run(async () =>
                         {
-                            CropPicAndSave(file);
-                            count++;
+                            myProgressBar1.SetMinMax(0, openFileDialog.FileNames.Count(),0);
+                            foreach (string file in openFileDialog.FileNames)
+                            {
+                                await   CropPicAndSaveAsync(file);
+                                count++;
+                                myProgressBar1.AddValue();
+                                //Application.DoEvents();
+                            }
 
-                            Application.DoEvents();
-                        }
+                        }); 
+                        
 
                         MessageBox.Show($"จัดการสำเร็จทั้งหมด {count} ไฟล์เรียบร้อยแล้ว!", "Batch Success",
                                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -63,57 +71,79 @@ namespace CropPic
                 }
             }
         }
-
-        private void CropPicAndSave(string targetFile, double topPercent = 0.11, double bottomPercent = 0.118)
+        private async Task CropPicAndSaveAsync(string targetFile,
+            double topPercent = 0.11,
+            double bottomPercent = 0.118)
         {
             if (string.IsNullOrEmpty(targetFile) || !File.Exists(targetFile)) return;
 
-            string oldFileToDelete = targetFile;
-
             try
             {
-                if (pictureBox1.Image != null)
+                await Task.Run(() =>
                 {
-                    pictureBox1.Image.Dispose();
-                    pictureBox1.Image = null;
-                }
+                    pictureBox1.Invoke(new Action(() => {
+                        if (pictureBox1.Image != null)
+                        {
+                            pictureBox1.Image.Dispose();
+                            pictureBox1.Image = null;
+                        }
+                    }));
 
-                string dir = Path.GetDirectoryName(targetFile);
-                string name = Path.GetFileNameWithoutExtension(targetFile);
-                string ext = Path.GetExtension(targetFile);
-                string newPath = Path.Combine(dir, $"{name}_CROP_{DateTime.Now:yyyyMMdd_HHmmss}{ext}");
-
-                using (var image = SixLabors.ImageSharp.Image.Load(targetFile))
-                {
-                    int topPx = (int)(image.Height * topPercent);
-                    int bottomPx = (int)(image.Height * bottomPercent);
-                    int finalHeight = image.Height - (topPx + bottomPx);
-
-                    if (finalHeight <= 0)
-                        throw new Exception("สัดส่วนการตัดมากเกินขนาดรูปภาพ");
-
-                    image.Mutate(ctx =>
-                        ctx.Crop(new SixLabors.ImageSharp.Rectangle(0, topPx, image.Width, finalHeight))
-                    );
-
-                    image.Save(newPath);
-                }
-
-                if (File.Exists(oldFileToDelete) && oldFileToDelete != newPath)
-                {
-                    try
+                    using (var image = SixLabors.ImageSharp.Image.Load(targetFile))
                     {
-                        GC.Collect();
-                        GC.WaitForPendingFinalizers();
+                        int width = image.Width;
+                        int height = image.Height;
 
-                        File.Delete(oldFileToDelete);
+                        int topPx = (int)(height * topPercent);
+                        int bottomPx = (int)(height * bottomPercent);
+                        int finalHeight = height - (topPx + bottomPx);
+
+                        if (finalHeight <= 0)
+                            throw new Exception("สัดส่วนการตัดมากเกินขนาดรูปภาพ");
+
+                        using (var cropped = image.Clone(ctx =>
+                            ctx.Crop(new SixLabors.ImageSharp
+                            .Rectangle(0, topPx, width, finalHeight))
+                        ))
+                        {
+                            using (var finalImage =
+                            new SixLabors
+                            .ImageSharp
+                            .Image<SixLabors.ImageSharp.PixelFormats
+                            .Rgba32>(width, height, SixLabors.ImageSharp.Color.Black))
+                            {
+                                finalImage.Mutate(ctx =>
+                                    ctx.DrawImage(cropped,
+                                    new SixLabors.ImageSharp.Point(0, topPx), 1f)
+                                );
+
+                                if (checkBox1.Checked) // ใช้ค่าจากตัวแปรที่เก็บไว้
+                                {
+                                    finalImage.Save(targetFile);
+                                    filePic = targetFile;
+                                }
+                                else //บันทึกแยกไฟล์ใหม่
+                                {
+                                    string dir = Path.GetDirectoryName(targetFile) ?? "";
+                                    string fileName =
+                                    Path.GetFileNameWithoutExtension(targetFile);
+                                    string ext = Path.GetExtension(targetFile);
+                                    string newFile =
+                                    Path.Combine(dir,
+                                    $"{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}{ext}");
+
+                                    finalImage.Save(newFile);
+                                    filePic = newFile;
+                                }
+                            }
+                        }
                     }
-                    catch { }
-                }
+                });
+               
+                await ShowImageAsync(filePic);
 
-                filePic = newPath;
-                ShowImage(filePic);
-                this.Text = $"จัดการเสร็จแล้ว: {Path.GetFileName(filePic)}";
+                this.Invoke(new Action(() =>
+                this.Text = $"จัดการเสร็จแล้ว: {Path.GetFileName(filePic)}"));
             }
             catch (Exception ex)
             {
@@ -122,29 +152,138 @@ namespace CropPic
             }
         }
 
+        private async Task ShowImageAsync(string path)
+        {
+            await Task.Run(async() => {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    var ms = new MemoryStream();
+                    stream.CopyTo(ms);
+                    ms.Position = 0;
+                    pictureBox1.Invoke(new Action(() =>
+                    {
+                        if (pictureBox1.Image != null)
+                            pictureBox1.Image.Dispose();
+                        pictureBox1.Image = System.Drawing.Image.FromStream(ms);
+                    }));
+                }
+                label1.Invoke(new Action(() =>
+                {
+                    if (label1 != null)
+                        label1.Text = "Path: " + path;
+                }));
+                await Task.Delay(2000);//2 วิ
+            });
+
+        }
+        
+
+
+        private void CropPicAndSave(string targetFile,
+           double topPercent = 0.11,
+           double bottomPercent = 0.118)
+        {
+            if (string.IsNullOrEmpty(targetFile) || !File.Exists(targetFile)) return;
+            try
+            {
+                //ตัดการทำงานของ pictureBox1 เพื่อไม่ให้นำรูปไปใช้
+                if (pictureBox1.Image != null)
+                {
+                    pictureBox1.Image.Dispose();
+                    pictureBox1.Image = null;
+                }
+
+                using (var image = SixLabors.ImageSharp.Image.Load(targetFile))
+                {
+                    int width = image.Width;
+                    int height = image.Height;
+
+                    int topPx = (int)(height * topPercent);
+                    int bottomPx = (int)(height * bottomPercent);
+                    int finalHeight = height - (topPx + bottomPx);
+
+                    if (finalHeight <= 0)
+                        throw new Exception("สัดส่วนการตัดมากเกินขนาดรูปภาพ");
+                    // 1. Crop เฉพาะส่วนกลางก่อน
+                    using (var cropped = image.Clone(ctx =>
+                        ctx.Crop(new SixLabors.ImageSharp.Rectangle(0, topPx, width, finalHeight))
+                    ))
+                    {
+                        // 2. สร้างภาพใหม่ขนาดเท่าเดิม (พื้นหลังสีดำ)
+                        using (var finalImage =
+                            new SixLabors.ImageSharp
+                            .Image<SixLabors
+                            .ImageSharp
+                            .PixelFormats.Rgba32>(width, height, SixLabors.ImageSharp.Color.Black))
+                        {
+                            // 3. วางภาพที่ crop ลงตรงกลาง
+                            finalImage.Mutate(ctx =>
+                                ctx.DrawImage(cropped, new SixLabors.ImageSharp.Point(0, topPx), 1f)
+                            );
+                            if (checkBox1.Checked)//บันทึกทับแทนไฟล์เดิม
+                            {
+                                finalImage.Save(targetFile);
+                                filePic = targetFile;
+                            }
+                            else//บันทึกแยกไฟล์ใหม่
+                            {
+                                string dir = Path.GetDirectoryName(targetFile) ?? "";
+                                string fileName = Path.GetFileNameWithoutExtension(targetFile);
+                                string ext = Path.GetExtension(targetFile);
+
+                                string newFile = Path.Combine(
+                                    dir,
+                                    $"{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}{ext}"
+                                );
+
+                                finalImage.Save(newFile);
+                                filePic = newFile;
+
+                            }
+                        }
+                    }
+                }
+
+
+                ShowImage(filePic);
+                this.Invoke(new Action(() => this.Text = $"จัดการเสร็จแล้ว: {Path.GetFileName(filePic)}"));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"การตัดรูปขัดข้อง: {ex.Message}", "Error",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         private void ShowImage(string path)
         {
-            if (pictureBox1.Image != null)
-                pictureBox1.Image.Dispose();
+           
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    var ms = new MemoryStream();
+                    stream.CopyTo(ms);
+                    ms.Position = 0;
+                    pictureBox1.Invoke(new Action(() =>
+                    {
+                        if (pictureBox1.Image != null)
+                            pictureBox1.Image.Dispose();
+                        pictureBox1.Image = System.Drawing.Image.FromStream(ms);
+                    }));
+                }
+                label1.Invoke(new Action(() =>
+                {
+                    if (label1 != null)
+                        label1.Text = "Path: " + path;
+                }));
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
-            {
-                var ms = new MemoryStream();
-                stream.CopyTo(ms);
-                ms.Position = 0;
-                pictureBox1.Image = System.Drawing.Image.FromStream(ms);
-            }
-
-            if (label1 != null)
-                label1.Text = "Path: " + path;
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private async void button4_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Multiselect = true;
                 openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.webp";
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     button4.Enabled = false;
@@ -152,16 +291,19 @@ namespace CropPic
 
                     try
                     {
+
+                        myProgressBar1.SetMinMax(0, openFileDialog.FileNames.Count(), 0);
+
                         foreach (string file in openFileDialog.FileNames)
                         {
-                            CropPicAndSave(filePic, 0.070, 0.125);
-                            count++;
+                            // เรียกใช้ตัว Async และรอ (await) ให้เสร็จทีละไฟล์
+                            await CropPicAndSaveAsync(file, 0.070, 0.120);
 
-                            Application.DoEvents();
+                            count++;
+                            myProgressBar1.AddValue();
                         }
 
-                        MessageBox.Show($"จัดการสำเร็จทั้งหมด {count} ไฟล์เรียบร้อยแล้ว!", "Batch Success",
-                                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"จัดการสำเร็จทั้งหมด {count} ไฟล์เรียบร้อยแล้ว!", "Batch Success");
                     }
                     catch (Exception ex)
                     {

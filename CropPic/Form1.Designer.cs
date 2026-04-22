@@ -29,23 +29,26 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
+            checkBox1 = new CheckBox();
+            txtDown = new TextBox();
+            label3 = new Label();
+            txtUp = new TextBox();
+            label2 = new Label();
+            button5 = new Button();
             button2 = new Button();
             button4 = new Button();
             button3 = new Button();
             label1 = new Label();
-            button1 = new Button();
             pictureBox1 = new PictureBox();
-            button5 = new Button();
-            label2 = new Label();
-            txtUp = new TextBox();
-            txtDown = new TextBox();
-            label3 = new Label();
+            myProgressBar1 = new TORServices.Forms.MyProgressBar();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
             // panel1
             // 
+            panel1.Controls.Add(myProgressBar1);
+            panel1.Controls.Add(checkBox1);
             panel1.Controls.Add(txtDown);
             panel1.Controls.Add(label3);
             panel1.Controls.Add(txtUp);
@@ -55,12 +58,67 @@
             panel1.Controls.Add(button4);
             panel1.Controls.Add(button3);
             panel1.Controls.Add(label1);
-            panel1.Controls.Add(button1);
             panel1.Dock = DockStyle.Top;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(949, 102);
+            panel1.Size = new Size(702, 137);
             panel1.TabIndex = 0;
+            // 
+            // checkBox1
+            // 
+            checkBox1.AutoSize = true;
+            checkBox1.Checked = true;
+            checkBox1.CheckState = CheckState.Checked;
+            checkBox1.Location = new Point(186, 46);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(108, 19);
+            checkBox1.TabIndex = 11;
+            checkBox1.Text = "บันทึกแทนไฟล์เดิม";
+            checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // txtDown
+            // 
+            txtDown.Location = new Point(514, 68);
+            txtDown.Name = "txtDown";
+            txtDown.Size = new Size(64, 23);
+            txtDown.TabIndex = 10;
+            txtDown.Text = "0.125";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(484, 72);
+            label3.Name = "label3";
+            label3.Size = new Size(29, 15);
+            label3.TabIndex = 9;
+            label3.Text = "ล่าง :";
+            // 
+            // txtUp
+            // 
+            txtUp.Location = new Point(427, 68);
+            txtUp.Name = "txtUp";
+            txtUp.Size = new Size(50, 23);
+            txtUp.TabIndex = 8;
+            txtUp.Text = "0.11";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(397, 72);
+            label2.Name = "label2";
+            label2.Size = new Size(24, 15);
+            label2.TabIndex = 7;
+            label2.Text = "บน:";
+            // 
+            // button5
+            // 
+            button5.Location = new Point(584, 68);
+            button5.Name = "button5";
+            button5.Size = new Size(89, 23);
+            button5.TabIndex = 6;
+            button5.Text = "Crop ";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
             // 
             // button2
             // 
@@ -78,7 +136,7 @@
             button4.Name = "button4";
             button4.Size = new Size(209, 23);
             button4.TabIndex = 4;
-            button4.Text = "Crop บน 0.075ล่าง  0.125";
+            button4.Text = "Crop บน 0.07ล่าง  0.12";
             button4.UseVisualStyleBackColor = true;
             button4.Click += button4_Click;
             // 
@@ -95,87 +153,41 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(209, 10);
+            label1.Location = new Point(18, 9);
             label1.Name = "label1";
             label1.Size = new Size(34, 15);
             label1.TabIndex = 2;
             label1.Text = "Path:";
             // 
-            // button1
-            // 
-            button1.Location = new Point(18, 10);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 23);
-            button1.TabIndex = 0;
-            button1.Text = "Open";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
-            // 
             // pictureBox1
             // 
+            pictureBox1.BackColor = Color.Black;
             pictureBox1.Dock = DockStyle.Fill;
-            pictureBox1.Location = new Point(0, 102);
+            pictureBox1.Location = new Point(0, 137);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(949, 669);
+            pictureBox1.Size = new Size(702, 753);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox1.TabIndex = 1;
             pictureBox1.TabStop = false;
             // 
-            // button5
+            // myProgressBar1
             // 
-            button5.Location = new Point(680, 68);
-            button5.Name = "button5";
-            button5.Size = new Size(89, 23);
-            button5.TabIndex = 6;
-            button5.Text = "Crop ";
-            button5.UseVisualStyleBackColor = true;
-            button5.Click += button5_Click;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(397, 72);
-            label2.Name = "label2";
-            label2.Size = new Size(24, 15);
-            label2.TabIndex = 7;
-            label2.Text = "บน:";
-            // 
-            // txtUp
-            // 
-            txtUp.Location = new Point(427, 68);
-            txtUp.Name = "txtUp";
-            txtUp.Size = new Size(100, 23);
-            txtUp.TabIndex = 8;
-            txtUp.Text = "0.11";
-            // 
-            // txtDown
-            // 
-            txtDown.Location = new Point(574, 68);
-            txtDown.Name = "txtDown";
-            txtDown.Size = new Size(100, 23);
-            txtDown.TabIndex = 10;
-            txtDown.Text = "0.125";
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(544, 72);
-            label3.Name = "label3";
-            label3.Size = new Size(29, 15);
-            label3.TabIndex = 9;
-            label3.Text = "ล่าง :";
+            myProgressBar1.Dock = DockStyle.Bottom;
+            myProgressBar1.Location = new Point(0, 105);
+            myProgressBar1.Name = "myProgressBar1";
+            myProgressBar1.Size = new Size(702, 32);
+            myProgressBar1.TabIndex = 12;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(949, 771);
+            ClientSize = new Size(702, 890);
             Controls.Add(pictureBox1);
             Controls.Add(panel1);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Crop Pic";
-            WindowState = FormWindowState.Maximized;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
@@ -185,7 +197,6 @@
         #endregion
 
         private Panel panel1;
-        private Button button1;
         private PictureBox pictureBox1;
         private Label label1;
         private Button button3;
@@ -196,5 +207,7 @@
         private TextBox txtUp;
         private Label label2;
         private Button button5;
+        private CheckBox checkBox1;
+        private TORServices.Forms.MyProgressBar myProgressBar1;
     }
 }
